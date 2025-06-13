@@ -32,6 +32,7 @@ import { getJobs, setJobs } from './redux/slices/JobsSlice';
 import AllJobs from './components/AllJobs';
 import AboutUs from './components/AboutUs';
 import ProfilePage from './components/Dashboard/ProfilePage';
+import BioMarkerHome from './components/BioMarker/BioMarkerHome';
 
 
 
@@ -103,9 +104,10 @@ function App() {
 
   return (
     <div className="App bg-light">
-      <Header></Header>
+      {/* <Header></Header> */}
       <Routes>
-        <Route path='/' element={<MainPage></MainPage>}></Route>
+        {/* <Route path='/' element={<MainPage></MainPage>}></Route> */}
+        <Route path='/' element={<BioMarkerHome></BioMarkerHome>}></Route>
         <Route path='/about' element={<AboutUs></AboutUs>}></Route>
         <Route path='/jobs'>
           <Route path='' element={<AllJobs></AllJobs>}></Route>
@@ -129,7 +131,7 @@ function App() {
           <Route path='applied' element={<AppliedJobs></AppliedJobs>}></Route>
         </Route>
       </Routes>
-      <Footer></Footer>
+      {/* <Footer></Footer> */}
       <ToastContainer className="mt-5 pt-2" />
     </div>
   );
