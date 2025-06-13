@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     useReactTable,
     getCoreRowModel,
@@ -6,17 +6,10 @@ import {
     flexRender,
     createColumnHelper,
 } from '@tanstack/react-table';
-import '../../css/BioMarker/BioMarker.css'
-import cdacLogo from '../../assets/CDAC.png'
+import '../../css/BioMarker/BioMarker.css';
+import cdacLogo from '../../assets/CDAC.png';
+import BioMarkerService from '../../service/BioMarkerService';
 
-// Sample data
-const data = Array.from({ length: 23 }).map((_, i) => ({
-    accessionNumber: `ACC-${i + 1}`,
-    lineage: `Lineage ${i + 1}`,
-    sequence: `SEQ${i + 1}`,
-}));
-
-// Column helper (without type)
 const columnHelper = createColumnHelper();
 
 const columns = [
@@ -32,13 +25,44 @@ const columns = [
 ];
 
 export default function BioMarkerHome() {
+    const [bioMarkerData, setBioMarkerData] = useState([]);
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [isSaving, setIsSaving] = useState(false);
+
+    const handleFileChange = (e) => {
+        setSelectedFile(e.target.files[0] || null);
+    };
+
+    const handleSaveClick = () => {
+        if (!selectedFile) return;
+        setIsSaving(true);
+
+        BioMarkerService.saveFile(selectedFile)
+            .then(res => {
+                setBioMarkerData(res.data); // Update table data
+                alert("File uploaded and data loaded!");
+            })
+            .catch(err => {
+                console.error("Upload error", err);
+                alert("Upload failed");
+            })
+            .finally(() => setIsSaving(false));
+    };
+
+    useEffect(() => {
+        // Load all existing BioMarkers on mount
+        BioMarkerService.getAll()
+            .then(res => setBioMarkerData(res.data))
+            .catch(err => console.error("Failed to load data", err));
+    }, []);
+
     const [pagination, setPagination] = useState({
         pageIndex: 0,
         pageSize: 10,
     });
 
     const table = useReactTable({
-        data,
+        data: bioMarkerData,
         columns,
         state: { pagination },
         onPaginationChange: setPagination,
@@ -48,31 +72,43 @@ export default function BioMarkerHome() {
 
     return (
         <div className='bg-light pb-2'>
-            <div className='py-2 bg-danger d-flex justify-content-between'>
+            {/* Header */}
+            <div className='py-2 bg-danger d-flex justify-content-between align-items-center'>
                 <div>
-                    <img src={cdacLogo} className='img-fluid ms-3' width={'60px'}></img>
+                    <img src={cdacLogo} className='img-fluid ms-3' width='60px' alt="CDAC Logo" />
                 </div>
                 <div className='text-white display-6 text-center fw-bold'>Bio-Marker</div>
-                <div>
-                    
-                </div>
+                <div></div>
             </div>
 
             <div className='p-3 m-5 mb-5'>
                 <div className='row'>
+                    {/* File Upload */}
                     <div className='col-12 card p-3 mb-3'>
                         <div className="mb-3">
-                            <label htmlFor="formFile" className="form-label">Upload your file</label>
-                            <input className="form-control" type="file" id="formFile" />
+                            <label htmlFor="formFile" className="form-label fw-bold text-decoration-underline">
+                                Upload your file
+                            </label>
+                            <input className="form-control" type="file" id="formFile" onChange={handleFileChange} />
+                        </div>
+                        <div className='text-center'>
+                            <button
+                                className='btn btn-success'
+                                onClick={handleSaveClick}
+                                disabled={!selectedFile || isSaving}
+                            >
+                                {isSaving ? "Saving..." : "Save"}
+                            </button>
                         </div>
                     </div>
 
+                    {/* Table */}
                     <div className='col-12 card p-3'>
-                        <h5 className='mb-3'>Data</h5>
+                        <h5 className='mb-3 text-decoration-underline'>Data</h5>
                         <div className="table-responsive">
-                            <table className="table shadow-sm mb-2 table-bordered table-hover table-striped align-middle text-center mb-0">
-                                <thead className="table-danger">
-                                    <tr className=''>
+                            <table className="table shadow-sm table-bordered table-hover table-striped align-middle text-center mb-0">
+                                <thead className="table-dark">
+                                    <tr>
                                         <th style={{ width: "25%" }}>Accession Number</th>
                                         <th style={{ width: "25%" }}>Lineage</th>
                                         <th style={{ width: "50%" }}>Sequence</th>
@@ -91,8 +127,8 @@ export default function BioMarkerHome() {
                                 </tbody>
                             </table>
 
-                            {/* Pagination Controls */}
-                            <div className="d-flex justify-content-between align-items-center">
+                            {/* Pagination */}
+                            <div className="d-flex justify-content-between align-items-center mt-3">
                                 <div className='small fw-bold'>
                                     Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
                                 </div>
